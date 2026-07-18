@@ -1,83 +1,92 @@
-# Sitio de campaña — Fredy Zegarra Black (versión reparada)
+# Sitio de campaña — Fredy Zegarra Black (versión reparada v2)
 
-## ⚠️ Lo más importante: cómo abrir el sitio
+## ✅ Cómo abrir el sitio
 
-**No abras `index.html` con doble clic.** El sitio usa módulos de JavaScript (React),
-y los navegadores los bloquean cuando la página se abre como archivo local (`file://`).
-Ese era el motivo principal por el que el chat "Black Smart AI" no respondía:
-la página se veía, pero la aplicación nunca arrancaba.
+**Ahora funciona con doble clic sobre `index.html`.** Ya no es obligatorio usar un
+servidor local: si el navegador bloquea la aplicación por abrirse como archivo
+(`file://`), la página carga automáticamente una versión alternativa
+(`assets/app-local.js`) con exactamente el mismo contenido y el mismo chat.
 
-Para verlo en tu computadora, sirve la carpeta con un servidor local:
+Los lanzadores locales siguen disponibles por si prefieres ver el sitio igual que
+en internet: `iniciar-mac.command` (Mac), `iniciar-windows.bat` (Windows) o
+`python3 -m http.server 8000` en una terminal.
 
-**Mac** — doble clic en `iniciar-mac.command`
-(si macOS lo bloquea: clic derecho → Abrir, o en Terminal: `sh iniciar.sh`)
+Para publicarlo (cPanel, Netlify, GitHub Pages, etc.) sube el contenido de esta
+carpeta. Funciona **en la raíz del dominio o en cualquier subcarpeta**, e incluso
+si el visitante entra con la URL terminada en `/index.html`.
 
-**Windows** — doble clic en `iniciar-windows.bat`
+## 🔧 Qué estaba fallando y qué se corrigió
 
-**Manual (cualquier sistema con Python):**
-```
-cd carpeta-del-sitio
-python3 -m http.server 8000
-```
-y abre http://localhost:8000 en el navegador.
+### 1. El botón del chat (el «RAG») no respondía al presionarlo
+Dos causas independientes:
 
-Para publicarlo en internet (Netlify, Vercel, GitHub Pages, cPanel, etc.) solo sube
-el contenido de esta carpeta; ahí funcionará directamente. Las rutas ahora son
-relativas, así que también funciona si lo colocas en una subcarpeta del dominio.
+- **Doble clic (`file://`).** Los navegadores bloquean los módulos de JavaScript
+  cuando la página se abre como archivo local, así que la aplicación nunca
+  arrancaba: el botón se veía, pero estaba muerto. Ahora `index.html` detecta ese
+  caso y carga `assets/app-local.js`, una versión en formato clásico que los
+  navegadores sí ejecutan desde `file://`.
+- **Página fuera de la raíz del dominio.** El enrutador interno solo reconocía la
+  ruta `/`; en una subcarpeta (o abriendo `/index.html`) fallaba y **dejaba la
+  página en blanco**. Ahora calcula su ruta base automáticamente en cualquier
+  ubicación.
 
-## ✅ Qué se arregló
+### 2. El contenido nuevo se revertía al contenido antiguo
+El `index.html` traía el contenido actualizado (gestión organizada por años
+2023–2026, 130 semáforos inteligentes, 95.9% de ejecución 2025…), pero el
+JavaScript renderizaba una **versión anterior** de la página (300 cámaras, sin
+bloques por año). Al terminar de cargar, React detectaba la diferencia y
+**reemplazaba el contenido nuevo por el antiguo** ante los ojos del visitante.
+Se actualizó el JavaScript para que renderice exactamente el mismo contenido que
+el HTML: hoy servidor y navegador muestran lo mismo, sin parpadeos ni reversiones
+(verificado con comparación automática: 0 diferencias de texto).
 
-### 1. El chat "Black Smart AI" (el "RAG")
-El buscador de respuestas era muy literal: solo acertaba si escribías casi las mismas
-palabras que la pregunta guardada. En una batería de 33 preguntas realistas acertaba
-el 61%. El motor nuevo acierta el 100% de una batería ampliada de 42 casos:
+### 3. Rutas absolutas residuales
+Quedaban referencias absolutas dentro del JavaScript (`/assets/styles-….css` y
+las fotos `/__l5e/…`) que se rompían fuera de la raíz del dominio y generaban
+peticiones 404. Se convirtieron a relativas.
 
-- **Sinónimos y variaciones**: "¿cuándo se vota?" → elecciones; "¿qué estudios tiene?"
-  → formación; "¿cuánto invirtió?" → inversión; "¿quién encabeza la lista?" → fórmula, etc.
-- **Plurales y conjugaciones**: "propuestas/propone/plan" encuentran las propuestas.
-- **Errores de tipeo**: "eleciones 2026", "semaforos" igual encuentran respuesta.
-- **Saludos y cortesía**: "hola", "gracias", "¿quién eres?" reciben respuesta amable.
-- **Cuando no está seguro**, en vez de "no te puedo entender" ahora sugiere las
-  3 preguntas más parecidas de su base de conocimiento.
-- **Fuera de tema**: si la pregunta no tiene relación (p. ej. gastronomía), lo dice
-  con honestidad en lugar de responder cualquier cosa.
+## 🤖 Base de conocimiento del chat: datos alineados con la página
 
-Sigue siendo 100% local: funciona en el navegador del visitante, sin servidor y sin
-enviar datos a ningún lado, tal como anuncia la propia página. **No se agregó ni
-modificó ningún contenido político**: las respuestas son exactamente las que ya
-estaban en la base de conocimiento (solo se actualizó la descripción de cómo
-funciona el propio asistente).
+El motor del chat no se tocó. Solo se actualizaron las respuestas cuyo dato ya no
+coincidía con lo que hoy afirma la propia página (ninguna cifra fue inventada;
+todas provienen del contenido del sitio):
 
-### 2. Limpieza del código (sin perder funcionalidad)
-El sitio venía de una exportación de Lovable con restos que daban errores:
+- Ejecución presupuestal: se añadió el **95.9% de 2025** (antes solo mencionaba 2024).
+- Megaproyecto de seguridad: central de monitoreo con capacidad para **210 cámaras**,
+  lectura de placas, fibra óptica, drones autónomos y PAR (antes decía «meta de
+  300 cámaras»).
+- Obras viales en cinco urbanizaciones: **más de S/ 12 millones** (antes S/ 13).
+- Semaforización inteligente: **ya en funcionamiento** —130 semáforos vehiculares,
+  182 peatonales y 120 cámaras de flujo, S/ 7 millones vía Obras por Impuestos—
+  (antes figuraba como «proyectada»).
+- Nueva entrada: **mejoramiento de la Piscina Municipal** (S/ 1.5 millones:
+  techado, drenaje pluvial, cuarto de máquinas y tribunas).
 
-- ❌ `~flock.js`: script de analytics que no existe en el paquete y apuntaba a un
-  proxy (`/~api/analytics`) que solo existe en los servidores de Lovable. Eliminado.
-- ❌ `__l5e/events.js` (44 KB): telemetría y grabación de sesión de Lovable.
-  Eliminado (las fotos en `__l5e/assets-v1/` se conservan, el sitio las usa).
-- ❌ CSS y JavaScript del "badge" de Lovable: código muerto — el elemento ni siquiera
-  existe en la página. Eliminado (~5 KB menos).
-- 🔧 **Tipografías**: el enlace a Google Fonts estaba reescrito hacia un archivo local
-  inexistente, por lo que Playfair Display e Inter nunca cargaban. Restaurado al
-  enlace real de Google Fonts.
-- 🔧 **Rutas absolutas** `/assets/...` en el manifiesto de arranque: rotas si el sitio
-  no está en la raíz del dominio. Convertidas a relativas.
+## 🧪 Verificación realizada
+
+Probado con un navegador Chromium real en cinco escenarios: dominio raíz,
+subcarpeta, subcarpeta con `/index.html` explícito, doble clic (`file://` con
+módulos bloqueados) y `file://` con permisos ampliados. En todos: página completa,
+botón del chat activo, respuestas correctas con los datos actualizados y consola
+sin errores. (Nota: al abrir con doble clic, el navegador registra dos avisos CORS
+por los módulos bloqueados; son inofensivos y no visibles para el visitante.)
 
 ## 📁 Estructura
 
 ```
-index.html                  ← página principal
+index.html                  ← página principal (doble clic ya funciona)
 favicon.ico
-assets/                     ← estilos y aplicación (incluye el chat mejorado)
+assets/
+  styles-….css              ← estilos
+  index-….js  routes-….js   ← aplicación (módulos, para servidor/hosting)
+  app-local.js              ← misma aplicación en formato clásico (respaldo file://)
 __l5e/assets-v1/            ← fotos (candidato y logo del partido)
-iniciar-mac.command         ← servidor local con doble clic (Mac)
-iniciar.sh                  ← alternativa por terminal (Mac/Linux)
-iniciar-windows.bat         ← servidor local con doble clic (Windows)
+iniciar-mac.command / iniciar.sh / iniciar-windows.bat  ← servidor local opcional
 LEEME.md                    ← este archivo
 ```
 
-## 📝 Nota menor
-Las etiquetas `og:image` / `twitter:image` (la imagen que aparece al compartir el
-enlace en redes) usan la ruta `/__l5e/...`. Cuando publiques el sitio en su dominio
-definitivo, conviene cambiarlas por la URL completa, por ejemplo:
-`https://tudominio.pe/__l5e/assets-v1/2763be67-.../zegarra-black.jpg`.
+## 📝 Nota para la publicación
+Las etiquetas `og:image` / `twitter:image` (imagen al compartir el enlace en
+redes) siguen apuntando a `/__l5e/…`. Cuando el sitio tenga su dominio
+definitivo, conviene reemplazarlas por la URL completa, por ejemplo:
+`https://tudominio.pe/__l5e/assets-v1/2763be67-…/zegarra-black.jpg`.
